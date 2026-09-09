@@ -144,3 +144,39 @@ decision is good Section 6 material.
 - **Where it lives:** `prisma/schema.prisma`
 - **Tunable values set, and why those numbers:** N/A
 - **Was this choice forced? If so, by what:** 
+
+## Proration Rounding Direction
+
+- **Date:** 2026-09-08
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** `Math.ceil()` (Rounding up the credit in favor of the customer)
+- **What I chose against:** `Math.floor()` (Rounding down in favor of the business)
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `lib/payments/money.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:** 
+
+## Plan ID Mapping
+
+- **Date:** 2026-09-08
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Stored in `.env` as `STRIPE_PRICE_MONTHLY` and `STRIPE_PRICE_YEARLY`.
+- **What I chose against:** Hardcoding test IDs directly in the Stripe adapter code.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `.env` and `lib/payments/stripe.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:** 
+
+## Webhook Event Mapping
+
+- **Date:** 2026-09-08
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Explicit 4-stage lifecycle map: `checkout.session.completed` maps to `VERIFICATION`, and `invoice.paid` maps to `FULFILLMENT`.
+- **What I chose against:** Leaving `checkout.session.completed` unmapped, or merging it ambiguously with fulfillment.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `lib/payments/stripe.ts` (inside `parseWebhook`)
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:** 
