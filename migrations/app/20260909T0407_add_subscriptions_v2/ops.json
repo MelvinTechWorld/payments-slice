@@ -1,0 +1,329 @@
+[
+  {
+    "id": "table.paymentEvent",
+    "label": "Create table \"paymentEvent\"",
+    "summary": "Creates table \"paymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "paymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"paymentEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"paymentEvent\"",
+        "sql": "CREATE TABLE \"public\".\"paymentEvent\" (\n  \"amount\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"eventType\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"planId\" text NOT NULL,\n  \"stripeEventId\" text,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"paymentEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.subscription",
+    "label": "Create table \"subscription\"",
+    "summary": "Creates table \"subscription\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "subscription"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"subscription\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"subscription\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"subscription\"",
+        "sql": "CREATE TABLE \"public\".\"subscription\" (\n  \"cancelAtPeriodEnd\" bool DEFAULT false NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"currentPeriodEnd\" timestamptz NOT NULL,\n  \"currentPeriodStart\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"planId\" text NOT NULL,\n  \"status\" text NOT NULL,\n  \"stripeCustomerId\" text NOT NULL,\n  \"stripeSubscriptionId\" text NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"subscription\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"subscription\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.paymentEvent.paymentEvent_stripeEventId_key",
+    "label": "Add unique constraint on \"paymentEvent\" (stripeEventId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "paymentEvent_stripeEventId_key",
+        "table": "paymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"paymentEvent_stripeEventId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEvent_stripeEventId_key",
+          "public",
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"paymentEvent_stripeEventId_key\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEvent\" ADD CONSTRAINT \"paymentEvent_stripeEventId_key\" UNIQUE (\"stripeEventId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"paymentEvent_stripeEventId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEvent_stripeEventId_key",
+          "public",
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.subscription.subscription_userId_key",
+    "label": "Add unique constraint on \"subscription\" (userId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "subscription_userId_key",
+        "table": "subscription"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"subscription_userId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "subscription_userId_key",
+          "public",
+          "\"public\".\"subscription\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"subscription_userId_key\"",
+        "sql": "ALTER TABLE \"public\".\"subscription\" ADD CONSTRAINT \"subscription_userId_key\" UNIQUE (\"userId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"subscription_userId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "subscription_userId_key",
+          "public",
+          "\"public\".\"subscription\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.subscription.subscription_stripeSubscriptionId_key",
+    "label": "Add unique constraint on \"subscription\" (stripeSubscriptionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "subscription_stripeSubscriptionId_key",
+        "table": "subscription"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"subscription_stripeSubscriptionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "subscription_stripeSubscriptionId_key",
+          "public",
+          "\"public\".\"subscription\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"subscription_stripeSubscriptionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"subscription\" ADD CONSTRAINT \"subscription_stripeSubscriptionId_key\" UNIQUE (\"stripeSubscriptionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"subscription_stripeSubscriptionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "subscription_stripeSubscriptionId_key",
+          "public",
+          "\"public\".\"subscription\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.paymentEvent.paymentEvent_userId_idx_a489d58a",
+    "label": "Create index \"paymentEvent_userId_idx_a489d58a\" on \"paymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "paymentEvent_userId_idx_a489d58a",
+        "table": "paymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"paymentEvent_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"paymentEvent_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"paymentEvent_userId_idx_a489d58a\" ON \"public\".\"paymentEvent\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"paymentEvent_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.paymentEvent.paymentEvent_userId_fkey",
+    "label": "Add foreign key \"paymentEvent_userId_fkey\" on \"paymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "paymentEvent_userId_fkey",
+        "table": "paymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"paymentEvent_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEvent_userId_fkey",
+          "public",
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"paymentEvent_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEvent\"\nADD CONSTRAINT \"paymentEvent_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"paymentEvent_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEvent_userId_fkey",
+          "public",
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.subscription.subscription_userId_fkey",
+    "label": "Add foreign key \"subscription_userId_fkey\" on \"subscription\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "subscription_userId_fkey",
+        "table": "subscription"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"subscription_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "subscription_userId_fkey",
+          "public",
+          "\"public\".\"subscription\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"subscription_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"subscription\"\nADD CONSTRAINT \"subscription_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"subscription_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "subscription_userId_fkey",
+          "public",
+          "\"public\".\"subscription\""
+        ]
+      }
+    ]
+  }
+]
