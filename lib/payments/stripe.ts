@@ -103,7 +103,26 @@ export class StripeProvider implements PaymentProvider {
       
       case 'invoice.paid': {
         const invoice = event.data.object as any;
-        const lineItem = invoice.lines?.data?.[0];
+        
+        // 2026 API structure: subscription is inside parent.subscription_details
+        const subscriptionId = invoice.parent?.subscription_details?.subscription || invoice.subscription;
+        const metadata = invoice.parent?.subscription_details?.metadata;
+        const expectedPlanId = metadata?.planId;
+
+        let lineItem;
+        if (expectedPlanId) {
+          const expectedPriceId = this.getPriceId(expectedPlanId);
+          lineItem = invoice.lines?.data?.find((li: any) => {
+            const id = li?.pricing?.price_details?.price || li?.price?.id || li?.plan?.id;
+            return id === expectedPriceId;
+          });
+        } else {
+          lineItem = invoice.lines?.data?.find((li: any) => li.amount >= 0);
+        }
+
+        if (!lineItem) {
+          throw new Error(`Failed to find matching line item in invoice for expected plan: ${expectedPlanId || 'unknown'}`);
+        }
         
         // 2026 API structure: price is inside pricing.price_details
         const priceId = lineItem?.pricing?.price_details?.price || lineItem?.price?.id || lineItem?.plan?.id;
@@ -112,9 +131,7 @@ export class StripeProvider implements PaymentProvider {
         const periodStart = lineItem?.period?.start ? new Date(lineItem.period.start * 1000) : undefined;
         const periodEnd = lineItem?.period?.end ? new Date(lineItem.period.end * 1000) : undefined;
         
-        // 2026 API structure: subscription is inside parent.subscription_details
-        const subscriptionId = invoice.parent?.subscription_details?.subscription || invoice.subscription;
-        const metadata = invoice.parent?.subscription_details?.metadata;
+        // User ID extraction
         
         let userId: string | undefined = metadata?.userId;
 
@@ -159,5 +176,30 @@ export class StripeProvider implements PaymentProvider {
       default:
         throw new Error(`Unhandled Stripe webhook event type: ${event.type}`);
     }
+  }
+
+  async upgradeSubscription(subscriptionId: string, newPlanId: string): Promise<void> {
+    const newPriceId = this.getPriceId(newPlanId);
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    if (!subscription.items.data.length) {
+      throw new Error('Subscription has no items to upgrade');
+    }
+    
+    // Update the subscription to the new price, and tell Stripe to invoice the proration immediately
+    await stripe.subscriptions.update(subscriptionId, {
+      items: [
+        {
+          id: subscription.items.data[0].id,
+          price: newPriceId,
+        },
+      ],
+      proration_behavior: 'always_invoice',
+      // Ensure we update the metadata to match the new plan
+      metadata: {
+        ...subscription.metadata,
+        planId: newPlanId,
+      },
+    });
   }
 }

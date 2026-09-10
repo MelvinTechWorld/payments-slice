@@ -40,4 +40,10 @@ export interface PaymentProvider {
    * translating provider-specific events into our unified domain events.
    */
   parseWebhook(body: string, signature: string): Promise<ProviderEvent>;
+
+  /**
+   * Upgrades a user's subscription to a new plan.
+   * Relies on the provider's native proration engine to execute the charge.
+   */
+  upgradeSubscription(subscriptionId: string, newPlanId: string): Promise<void>;
 }

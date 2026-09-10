@@ -228,3 +228,16 @@ decision is good Section 6 material.
 - **Where it lives:** `app/api/checkout/route.ts` (the block) and `app/api/webhooks/stripe/route.ts` (the fallback extension)
 - **Tunable values set, and why those numbers:** N/A
 - **Was this choice forced? If so, by what:**
+
+## Upgrade Proration Execution
+
+- **Date:** 2026-09-09
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Calculate an estimate internally to show the user, then let Stripe's native engine execute the actual charge (`proration_behavior: 'always_invoice'`).
+- **What I chose against:** Using `proration_behavior: 'none'` and creating a manual custom `invoiceitem` to force the charge to exactly match our internal calculation.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `app/api/subscription/upgrade/confirm/route.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:**
+
