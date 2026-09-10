@@ -4,6 +4,8 @@ export type ProviderEvent = {
   type: PaymentEventType;
   /** The unique event ID from the provider, used as an idempotency key */
   providerReference: string;
+  /** Our internal user ID (if available, e.g. from checkout session client_reference_id) */
+  userId?: string;
   /** The provider's customer ID */
   customerId: string;
   /** The provider's subscription ID, if applicable */
@@ -12,6 +14,8 @@ export type ProviderEvent = {
   planId?: string;
   /** Amount paid in minor units (cents) */
   amountInMinorUnits?: number;
+  /** The start date of the granted access period */
+  periodStart?: Date;
   /** The end date of the granted access period */
   periodEnd?: Date;
   /** Any error message or context */

@@ -43,8 +43,11 @@ export class StripeProvider implements PaymentProvider {
       mode: 'subscription',
       customer_email: email,
       client_reference_id: userId,
-      // Pass the planId into metadata so we can recover it during the checkout.session.completed webhook
-      metadata: { planId },
+      // Pass the planId and userId into metadata so we can recover them during webhooks
+      metadata: { planId, userId },
+      subscription_data: {
+        metadata: { planId, userId },
+      },
       line_items: [
         {
           price: priceId,
@@ -93,25 +96,44 @@ export class StripeProvider implements PaymentProvider {
           customerId: session.customer as string,
           subscriptionId: session.subscription as string,
           planId: session.metadata?.planId,
+          userId: session.client_reference_id as string,
+          amountInMinorUnits: session.amount_total || undefined,
         };
       }
       
       case 'invoice.paid': {
         const invoice = event.data.object as any;
         const lineItem = invoice.lines?.data?.[0];
-        const priceId = lineItem?.price?.id || lineItem?.plan?.id;
         
-        // Stripe returns period_end as a Unix timestamp (seconds)
-        const periodEnd = lineItem ? new Date(lineItem.period.end * 1000) : undefined;
+        // 2026 API structure: price is inside pricing.price_details
+        const priceId = lineItem?.pricing?.price_details?.price || lineItem?.price?.id || lineItem?.plan?.id;
         
+        // Stripe returns period_end and period_start as Unix timestamps (seconds)
+        const periodStart = lineItem?.period?.start ? new Date(lineItem.period.start * 1000) : undefined;
+        const periodEnd = lineItem?.period?.end ? new Date(lineItem.period.end * 1000) : undefined;
+        
+        // 2026 API structure: subscription is inside parent.subscription_details
+        const subscriptionId = invoice.parent?.subscription_details?.subscription || invoice.subscription;
+        const metadata = invoice.parent?.subscription_details?.metadata;
+        
+        let userId: string | undefined = metadata?.userId;
+
+        // Fallback: Retrieve subscription to get metadata if not present in the invoice event
+        if (!userId && subscriptionId) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId as string);
+          userId = sub.metadata?.userId;
+        }
+
         return {
           type: 'FULFILLMENT',
           providerReference: event.id,
           customerId: invoice.customer as string,
-          subscriptionId: invoice.subscription as string,
+          subscriptionId: subscriptionId as string,
           planId: priceId ? this.getPlanIdFromPriceId(priceId) : undefined,
           amountInMinorUnits: invoice.amount_paid,
+          periodStart,
           periodEnd,
+          userId,
         };
       }
 

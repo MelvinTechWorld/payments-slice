@@ -180,3 +180,51 @@ decision is good Section 6 material.
 - **Where it lives:** `lib/payments/stripe.ts` (inside `parseWebhook`)
 - **Tunable values set, and why those numbers:** N/A
 - **Was this choice forced? If so, by what:** 
+
+## Rate Limit on Checkout
+
+- **Date:** 2026-09-09
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** 10 requests per 10 minutes per IP, returning a 429 Too Many Requests status code
+- **What I chose against:** 3 requests per 1 minute per IP
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `app/api/checkout/route.ts`
+- **Tunable values set, and why those numbers:** 10 limit / 600s window. Gives the user room to make mistakes while still preventing automated spam or cost-accumulation attacks against the Stripe API.
+- **Was this choice forced? If so, by what:**
+
+## Unmapped Stripe Events
+
+- **Date:** 2026-09-09
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Catch unmapped events inside the API route and return a `200 OK` silently to acknowledge receipt without doing any database work.
+- **What I chose against:** Throwing an error for unmapped events, which would cause Stripe to retry them repeatedly.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `app/api/webhooks/stripe/route.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:**
+
+## Webhook Retry Handling (Idempotency)
+
+- **Date:** 2026-09-09
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Synchronous processing with a unique constraint check on `stripeEventId`. If the insertion fails with a unique constraint violation, we immediately return `200 OK` because it's a retry of an already-processed event.
+- **What I chose against:** Queue-based processing where we insert the raw webhook into a queue table and process it in the background.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `app/api/webhooks/stripe/route.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:**
+
+## Duplicate Payment Behaviour
+
+- **Date:** 2026-09-09
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** A two-part approach. First, we block checkouts at initiation if the user has an active subscription. Second, as a fallback for race conditions (e.g. two checkouts opened in parallel tabs), the webhook will extend the user's period by the paid duration rather than swallowing the money or automating a refund.
+- **What I chose against:** Refunding the duplicate payment automatically via the API, or silently rejecting the webhook without granting entitlement.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `app/api/checkout/route.ts` (the block) and `app/api/webhooks/stripe/route.ts` (the fallback extension)
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:**
