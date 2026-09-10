@@ -46,4 +46,10 @@ export interface PaymentProvider {
    * Relies on the provider's native proration engine to execute the charge.
    */
   upgradeSubscription(subscriptionId: string, newPlanId: string): Promise<void>;
+
+  /**
+   * Downgrades a user's subscription to a new plan.
+   * Schedules the change to take effect at the end of the current billing cycle.
+   */
+  downgradeSubscription(subscriptionId: string, newPlanId: string): Promise<void>;
 }

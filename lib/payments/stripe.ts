@@ -202,4 +202,49 @@ export class StripeProvider implements PaymentProvider {
       },
     });
   }
+
+  async downgradeSubscription(subscriptionId: string, newPlanId: string): Promise<void> {
+    const newPriceId = this.getPriceId(newPlanId);
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    
+    let scheduleId = subscription.schedule as string | null;
+    
+    // If no schedule exists, create one from the current subscription
+    if (!scheduleId) {
+      const schedule = await stripe.subscriptionSchedules.create({
+        from_subscription: subscriptionId,
+      });
+      scheduleId = schedule.id;
+    }
+
+    const schedule = await stripe.subscriptionSchedules.retrieve(scheduleId);
+    const currentPhase = schedule.phases[0];
+    
+    await stripe.subscriptionSchedules.update(scheduleId, {
+      end_behavior: 'release',
+      phases: [
+        {
+          start_date: currentPhase.start_date,
+          end_date: currentPhase.end_date,
+          items: currentPhase.items.map(item => ({
+            price: item.price as string,
+            quantity: item.quantity,
+          })),
+        },
+        {
+          start_date: currentPhase.end_date,
+          items: [
+            {
+              price: newPriceId,
+              quantity: 1,
+            },
+          ],
+          metadata: {
+            ...subscription.metadata,
+            planId: newPlanId,
+          }
+        }
+      ],
+    });
+  }
 }

@@ -241,3 +241,27 @@ decision is good Section 6 material.
 - **Tunable values set, and why those numbers:** N/A
 - **Was this choice forced? If so, by what:**
 
+## Downgrade Execution Strategy
+
+- **Date:** 2026-09-09
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Use Stripe Subscription Schedules to natively schedule the downgrade to take effect at the end of the current billing cycle.
+- **What I chose against:** Using a local pending state and intercepting the `invoice.created` webhook just before renewal to apply the downgrade.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `lib/payments/stripe.ts` and `app/api/subscription/downgrade/route.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:**
+
+## Pending Downgrade UI State
+
+- **Date:** 2026-09-09
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Add a `pendingPlanId` column to our local `Subscription` table to cache the pending downgrade state so the UI can read it instantly.
+- **What I chose against:** Querying Stripe live via `stripe.subscriptions.retrieve()` on every page load to check if a Schedule exists.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `schema.prisma`, `app/api/subscription/downgrade/route.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:**
+

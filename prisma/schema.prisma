@@ -49,6 +49,7 @@ model Subscription {
   userId               String   @unique
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   planId               String   // e.g., 'monthly', 'yearly'
+  pendingPlanId        String?  // the plan it will switch to at period end
   status               String   // e.g., 'active', 'canceled', 'past_due'
   currentPeriodStart   TimestamptzString
   currentPeriodEnd     TimestamptzString

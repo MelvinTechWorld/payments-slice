@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       await db.orm.public.Subscription.where({ id: existingSub.id }).update({
         status: 'active',
         planId: event.planId,
+        pendingPlanId: null, // Clear pending plan upon successful billing
         currentPeriodStart: event.periodStart.toISOString(),
         currentPeriodEnd: newPeriodEnd.toISOString(),
         stripeCustomerId: event.customerId,
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
     if (existingSub) {
       await db.orm.public.Subscription.where({ id: existingSub.id }).update({
         status: 'canceled',
+        pendingPlanId: null, // Wipe any scheduled downgrade since the sub is dead
         cancelAtPeriodEnd: true,
       });
     }

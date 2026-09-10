@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'6838c97b764a3bc2567066c35b55fee683779a7c79a995a1bcc2e575aa787977'>;
+  StorageHashBase<'cfd17268eee78d102dc59633ac7f7185bd1d5f39dd76dbb2f4b83760da56f452'>;
 export type ExecutionHash =
   ExecutionHashBase<'7ef88f46ddfb02c085ed6930c76c27198f24a008a7cb3d0a523b0fd9b48a7610'>;
 export type ProfileHash =
@@ -272,7 +272,6 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly userId: CodecTypes['pg/text@1']['output'];
       readonly planId: CodecTypes['pg/text@1']['output'];
-      readonly pendingPlanId: CodecTypes['pg/text@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly currentPeriodStart: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly currentPeriodEnd: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -331,7 +330,6 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly userId: CodecTypes['pg/text@1']['input'];
       readonly planId: CodecTypes['pg/text@1']['input'];
-      readonly pendingPlanId: CodecTypes['pg/text@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly currentPeriodStart: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly currentPeriodEnd: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -392,7 +390,6 @@ export type StorageColumnTypes = {
       readonly currentPeriodEnd: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly currentPeriodStart: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
-      readonly pendingPlanId: CodecTypes['pg/text@1']['output'] | null;
       readonly planId: CodecTypes['pg/text@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly stripeCustomerId: CodecTypes['pg/text@1']['output'];
@@ -451,7 +448,6 @@ export type StorageColumnInputTypes = {
       readonly currentPeriodEnd: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly currentPeriodStart: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
-      readonly pendingPlanId: CodecTypes['pg/text@1']['input'] | null;
       readonly planId: CodecTypes['pg/text@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly stripeCustomerId: CodecTypes['pg/text@1']['input'];
@@ -703,11 +699,6 @@ type ContractBase = Omit<
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
-                };
-                readonly pendingPlanId: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
                 };
                 readonly status: {
                   readonly nativeType: 'text';
@@ -1098,10 +1089,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly pendingPlanId: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
               readonly status: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -1157,7 +1144,6 @@ type ContractBase = Omit<
                 readonly id: { readonly column: 'id' };
                 readonly userId: { readonly column: 'userId' };
                 readonly planId: { readonly column: 'planId' };
-                readonly pendingPlanId: { readonly column: 'pendingPlanId' };
                 readonly status: { readonly column: 'status' };
                 readonly currentPeriodStart: { readonly column: 'currentPeriodStart' };
                 readonly currentPeriodEnd: { readonly column: 'currentPeriodEnd' };

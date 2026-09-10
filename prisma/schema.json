@@ -356,6 +356,13 @@
                   "kind": "scalar"
                 }
               },
+              "pendingPlanId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "planId": {
                 "nullable": false,
                 "type": {
@@ -425,6 +432,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "pendingPlanId": {
+                  "column": "pendingPlanId"
                 },
                 "planId": {
                   "column": "planId"
@@ -966,6 +976,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "pendingPlanId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "planId": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1160,7 +1175,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "cfd17268eee78d102dc59633ac7f7185bd1d5f39dd76dbb2f4b83760da56f452"
+    "storageHash": "6838c97b764a3bc2567066c35b55fee683779a7c79a995a1bcc2e575aa787977"
   },
   "execution": {
     "executionHash": "7ef88f46ddfb02c085ed6930c76c27198f24a008a7cb3d0a523b0fd9b48a7610",
