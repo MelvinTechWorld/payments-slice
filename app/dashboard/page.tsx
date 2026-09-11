@@ -28,6 +28,10 @@ export default async function DashboardPage() {
           Sign Out
         </button>
       </form>
+      <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+        <a href="/plans" style={{ textDecoration: 'underline' }}>Plans</a>
+        <a href="/billing" style={{ textDecoration: 'underline' }}>Billing</a>
+      </div>
     </div>
   );
 }

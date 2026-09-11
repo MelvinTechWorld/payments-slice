@@ -54,7 +54,7 @@ export class StripeProvider implements PaymentProvider {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.APP_URL}/dashboard?checkout=success`,
+      success_url: `${process.env.APP_URL}/return?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.APP_URL}/dashboard?checkout=cancelled`,
     });
 
