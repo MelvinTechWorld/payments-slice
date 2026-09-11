@@ -1,17 +1,4 @@
-# [Slice name] — Documentation
-
-<!--
-RENAME THIS FILE TO DOCUMENTATION.md AT THE REPOSITORY ROOT.
-
-Eight sections, in this order, every time. Do not add sections, do not
-reorder, do not rename headings.
-
-WHO WRITES WHAT:
-  Agent may draft:  Sections 2, 3, and the schema half of 4
-  I write myself:   Sections 1, 5, 6, 7, 8 — in my own words
-
-Delete every HTML comment before submitting.
--->
+# Payments Slice — Documentation
 
 ## 1. What This Is
 
@@ -21,66 +8,120 @@ What's deliberately not here: no product features behind the paywall, since the 
 
 ## 2. How To Run It
 
-<!--
-Numbered steps, fresh clone to running instance. A reviewer who cannot run this
-in under ten minutes assumes it does not run.
--->
-
 **Prerequisites**
 
--
+- Node.js (v20+ recommended)
+- PostgreSQL running locally or remotely (e.g. Neon, Supabase)
+- Stripe CLI installed and authenticated (for local webhook testing)
 
 **Steps**
 
-1.
+1. Clone the repository and install dependencies with `npm install`.
+2. Copy `.env.example` to `.env` and fill in the required values.
+3. Push the Prisma schema to your database using `npx prisma db push`.
+4. Open a second terminal and start the Stripe CLI listener to forward webhooks to your local server.
+5. Copy the webhook signing secret from the Stripe CLI output and paste it into `.env` as `STRIPE_WEBHOOK_SECRET`.
+6. Start the development server using `npm run dev`.
 
 **Environment variables**
 
 | Name | Where it comes from |
 |---|---|
-| | |
-
-<!-- .env.example must exist in the repo with commented placeholders. -->
+| `DATABASE_URL` | Your PostgreSQL instance's connection string (e.g., Neon). |
+| `STRIPE_SECRET_KEY` | Your Stripe Dashboard (Test Mode) -> Developers -> API keys. |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Your Stripe Dashboard (Test Mode) -> Developers -> API keys. |
+| `STRIPE_PRICE_MONTHLY` | Your Stripe Dashboard -> Product Catalog -> Monthly Plan -> Price ID. |
+| `STRIPE_PRICE_YEARLY` | Your Stripe Dashboard -> Product Catalog -> Yearly Plan -> Price ID. |
+| `STRIPE_WEBHOOK_SECRET` | Provided by the Stripe CLI when you run `stripe listen`. |
+| `EMAIL_API_KEY` | Your email provider dashboard (reused from auth-slice, though email is currently mocked to the console). |
 
 **Database setup**
 
 ```bash
-
+npx prisma db push
 ```
 
 **Start it**
 
+Terminal 1 (Webhooks):
 ```bash
-
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
 ```
 
-**It appears at:** `http://localhost:____`
+Terminal 2 (App):
+```bash
+npm run dev
+```
+
+**It appears at:** `http://localhost:3000`
 
 ## 3. The Flow, Step By Step
 
-<!--
-Narrative, not a list of endpoints. For each step, three things:
-  - what the user does
-  - what the frontend sends
-  - what the server does with it
-Name the actual route or file for each step.
+### Step 1 — Sign Up and Sign In (Reused from auth-slice)
 
-Test: could a reader finish this section able to predict where in the codebase
-any given behaviour lives?
--->
+**User:** Enters their email and a password on the `/signup` page, verifies their email using a 6-digit code, and is automatically signed in. (Alternatively, uses `/signin` if they already have an account).
+**Frontend sends:** A `POST` to `/api/auth/signup` containing the email and password, then a `POST` to `/api/auth/verify` with the code.
+**Server does:** Hashes the password, creates the user, generates and mocks sending the email verification code to the console, and upon successful verification, creates a session, sets the `sessionId` HTTP-only cookie, and redirects to the dashboard.
+**Lives in:** `app/api/auth/signup/route.ts`, `app/api/auth/verify/route.ts`, `app/api/auth/signin/route.ts`
 
-### Step 1 — [what the user does]
+### Step 2 — Viewing Plans
 
-**User:**
-**Frontend sends:**
-**Server does:**
-**Lives in:** `path/to/file`
+**User:** Navigates to `/plans` to view the available subscription tiers (Monthly and Yearly).
+**Frontend sends:** A standard `GET` request to load the page.
+**Server does:** Renders the static plans view, offering subscribe buttons for each.
+**Lives in:** `app/plans/page.tsx`
 
-<!-- repeat -->
+### Step 3 — Initiating Checkout
+
+**User:** Clicks the "Subscribe" button for their chosen plan.
+**Frontend sends:** A `POST` request to `/api/checkout` containing the `planId` (e.g., `monthly` or `yearly`).
+**Server does:** Verifies the user is authenticated and doesn't already have an active subscription. Applies rate limiting. Creates a Stripe Checkout Session via the Stripe SDK, logs an `INITIATION` row in `PaymentEvent`, and returns the Stripe checkout URL. The client then redirects the user to that URL.
+**Lives in:** `app/api/checkout/route.ts`
+
+### Step 4 — Completing Payment and Returning
+
+**User:** Enters their test card details on the Stripe-hosted checkout page and clicks pay. Stripe redirects them back to `/return`.
+**Frontend sends:** A `GET` request to `/return`, triggering the client-side `AutoRefresh` component which polls the server.
+**Server does:** The `/return` page reads the user's active `Subscription` status from the database. If it's not active yet, it displays a "Processing" state. Once the webhook confirms the payment (see Step 5) and the database is updated, the page refreshes to show a "Success" state.
+**Lives in:** `app/return/page.tsx`, `app/return/AutoRefresh.tsx`
+
+### Step 5 — Webhook Fulfillment (Server-to-Server)
+
+**User:** Does nothing directly. This happens purely in the background between Stripe and our server.
+**Frontend sends:** N/A. Stripe sends a `POST` request to `/api/webhooks/stripe`.
+**Server does:** Validates the webhook signature using `STRIPE_WEBHOOK_SECRET`. For `checkout.session.completed`, it logs a `VERIFICATION` event. For `invoice.paid`, it logs a `FULFILLMENT` event, checks for idempotency, maps the Stripe customer and subscription IDs to the local user, and updates or creates the `Subscription` row to grant entitlement.
+**Lives in:** `app/api/webhooks/stripe/route.ts`, `lib/payments/stripe.ts`
+
+### Step 6 — Viewing and Managing Billing
+
+**User:** Navigates to `/billing` to view their active subscription status, renewal date, and management options.
+**Frontend sends:** A `GET` request for the page.
+**Server does:** Fetches the user's `Subscription` row and renders the current state (plan, status, renewal/end date). If active, it renders the `BillingControls` component offering Upgrade, Downgrade, or Cancel buttons depending on the current plan.
+**Lives in:** `app/billing/page.tsx`, `app/billing/BillingControls.tsx`
+
+### Step 7 — Upgrading (Monthly to Yearly)
+
+**User:** Clicks "Upgrade to Yearly" and confirms the prorated credit preview shown in the modal (if added) or just triggers the upgrade.
+**Frontend sends:** A `POST` to `/api/subscription/upgrade/confirm`.
+**Server does:** Calculates the prorated credit internally (for display/logging purposes), then updates the Stripe subscription via the SDK to the yearly price with `proration_behavior: 'always_invoice'`. Stripe instantly issues and pays a prorated invoice, triggering a new `invoice.paid` webhook that logs a new `FULFILLMENT` event and extends the local `currentPeriodEnd`.
+**Lives in:** `app/api/subscription/upgrade/confirm/route.ts`, `lib/payments/money.ts`
+
+### Step 8 — Downgrading (Yearly to Monthly)
+
+**User:** Clicks "Downgrade to Monthly".
+**Frontend sends:** A `POST` to `/api/subscription/downgrade`.
+**Server does:** Calls the Stripe API to schedule a subscription schedule (or update) so the downgrade takes effect at the end of the current billing cycle rather than immediately. It updates the local `Subscription` row by setting `pendingPlanId = 'monthly'`.
+**Lives in:** `app/api/subscription/downgrade/route.ts`
+
+### Step 9 — Canceling
+
+**User:** Clicks "Cancel Subscription", optionally provides a reason, and confirms.
+**Frontend sends:** A `POST` to `/api/subscription/cancel` containing the optional reason.
+**Server does:** Calls Stripe to update the subscription with `cancel_at_period_end: true`. It updates the local `Subscription` row by setting `cancelAtPeriodEnd = true`, leaving `status = 'active'`, allowing the user to retain access until the period ends. It also logs a `CANCELLATION` event to record the cancellation reason.
+**Lives in:** `app/api/subscription/cancel/route.ts`
+
 
 ## 4. The Data Model
-
-<!-- Every table the slice uses. -->
 
 ### `User`
 Holds the core identity and credentials for a registered user.
@@ -149,29 +190,19 @@ An immutable, append-only log of every stage of every payment attempt.
 
 ### Which constraints make an invalid state impossible?
 
-<!--
-Answer this explicitly. I write this part, not the agent.
+The `@unique` constraint on `User.email` makes it impossible for two accounts to share an email, closing the exact race condition where two signup requests arriving nearly simultaneously could otherwise both succeed before either has finished checking whether the email exists.
 
-For each constraint, name what it prevents. A unique constraint, a check
-constraint, or a foreign key is not decoration — it is the last line of defence
-when the application code has a bug. Naming what each one prevents shows I chose
-it rather than accepted it.
--->
+The `@relation(onDelete: Cascade)` foreign keys on `Session`, `VerificationCode`, and `PasswordResetToken` make it impossible for any of these to exist without pointing at a real user, and guarantee that deleting a user cleanly removes their associated auth records rather than leaving orphaned rows behind.
+
+The `@unique` constraint on `Subscription.userId` makes it impossible for a single user to ever have two subscription rows simultaneously, which is what makes the checkout-block logic reliable — the code can trust that "does this user have a subscription" is always a single, unambiguous answer, never a choice between multiple conflicting rows.
+
+The `@unique` constraint on `Subscription.stripeSubscriptionId` makes it impossible for two local subscription rows to ever both claim to represent the same Stripe subscription, which matters directly for webhook processing — an incoming event can be matched to exactly one local row with certainty.
+
+The `@unique` constraint on `PaymentEvent.stripeEventId` is the constraint the whole idempotency design depends on: it makes it impossible for the same Stripe event to ever be recorded twice, regardless of how many times Stripe delivers it, no matter what the application code does or fails to check beforehand.
+
+The `PasswordResetToken.tokenHash` unique constraint makes it impossible for two different reset tokens to ever collide on the same hash value, which matters because a collision would let one user's reset link accidentally validate against a different user's pending request.
 
 ## 5. The Concepts
-
-<!--
-THE HEART OF THE DOCUMENT. THE MOST HEAVILY GRADED SECTION.
-
-Every concept from the assessment's list gets its own subheading and all four
-questions, in this order. No skipping the fourth — it is the question that
-separates people who made decisions from people who accepted defaults.
-
-Source material: docs/decisions.md.
-Depth expected: see the Password Hashing worked example in the brief.
-
-I WRITE THIS SECTION. Not the agent.
--->
 
 ### Proration
 
