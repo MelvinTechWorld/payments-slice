@@ -44,11 +44,12 @@ export async function POST(req: NextRequest) {
       eventType: event.type,
       amount: event.amountInMinorUnits || 0,
       planId: event.planId || 'unknown',
+      message: event.message || null,
     });
   } catch (err: any) {
-    // Catch unique constraint violation on stripeEventId
-    if (err.code === 'P2002' || (err.message && err.message.includes('Unique constraint'))) {
-      return NextResponse.json({ received: true, note: 'Idempotency caught duplicate' });
+    // Catch unique constraint violation on stripeEventId (Postgres 23505 via custom wrapper)
+    if (err.sqlState === '23505' || err.constraint === 'PaymentEvent_stripeEventId_key') {
+      return NextResponse.json({ received: true, note: 'duplicate event ignored' }, { status: 200 });
     }
     throw err;
   }

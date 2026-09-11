@@ -2,7 +2,12 @@ import { cookies } from 'next/headers';
 import { db } from '@/prisma/db';
 import { redirect } from 'next/navigation';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>;
+}) {
+  const params = await searchParams;
   const cookieStore = await cookies();
   const sessionId = cookieStore.get('sessionId')?.value;
 
@@ -22,6 +27,11 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      {params.checkout === 'cancelled' && (
+        <div style={{ backgroundColor: '#fff3cd', color: '#856404', padding: '0.5rem', marginBottom: '1rem', borderRadius: '4px' }}>
+          Checkout was cancelled.
+        </div>
+      )}
       <p>Welcome, {user.name}</p>
       <form action="/api/auth/signout" method="POST">
         <button type="submit" style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>

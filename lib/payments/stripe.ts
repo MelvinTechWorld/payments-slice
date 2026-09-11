@@ -156,10 +156,30 @@ export class StripeProvider implements PaymentProvider {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as any;
+        const subscriptionId = invoice.parent?.subscription_details?.subscription || invoice.subscription;
+        const metadata = invoice.parent?.subscription_details?.metadata;
+        const expectedPlanId = metadata?.planId;
+
+        let lineItem;
+        if (expectedPlanId) {
+          const expectedPriceId = this.getPriceId(expectedPlanId);
+          lineItem = invoice.lines?.data?.find((li: any) => {
+            const id = li?.pricing?.price_details?.price || li?.price?.id || li?.plan?.id;
+            return id === expectedPriceId;
+          });
+        } else {
+          lineItem = invoice.lines?.data?.find((li: any) => li.amount >= 0);
+        }
+        
+        const priceId = lineItem?.pricing?.price_details?.price || lineItem?.price?.id || lineItem?.plan?.id;
+
         return {
           type: 'FAILURE',
           providerReference: event.id,
           customerId: invoice.customer as string,
+          subscriptionId: subscriptionId as string,
+          planId: priceId ? this.getPlanIdFromPriceId(priceId) : undefined,
+          amountInMinorUnits: invoice.amount_due,
           message: 'Payment failed for recurring invoice',
         };
       }
