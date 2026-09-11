@@ -52,4 +52,9 @@ export interface PaymentProvider {
    * Schedules the change to take effect at the end of the current billing cycle.
    */
   downgradeSubscription(subscriptionId: string, newPlanId: string): Promise<void>;
+
+  /**
+   * Cancels a user's subscription.
+   */
+  cancelSubscription(subscriptionId: string, atPeriodEnd: boolean): Promise<void>;
 }

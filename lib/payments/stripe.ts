@@ -247,4 +247,21 @@ export class StripeProvider implements PaymentProvider {
       ],
     });
   }
+
+  async cancelSubscription(subscriptionId: string, atPeriodEnd: boolean): Promise<void> {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    
+    // If it has a schedule (e.g. pending downgrade), we must release the schedule first or cancel it.
+    if (subscription.schedule) {
+      await stripe.subscriptionSchedules.release(subscription.schedule as string);
+    }
+    
+    if (atPeriodEnd) {
+      await stripe.subscriptions.update(subscriptionId, {
+        cancel_at_period_end: true,
+      });
+    } else {
+      await stripe.subscriptions.cancel(subscriptionId);
+    }
+  }
 }

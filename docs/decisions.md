@@ -265,3 +265,27 @@ decision is good Section 6 material.
 - **Tunable values set, and why those numbers:** N/A
 - **Was this choice forced? If so, by what:**
 
+## Cancellation Timing
+
+- **Date:** 2026-09-10
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Cancel at period end. The user retains active status until the end of the billing cycle they have already paid for.
+- **What I chose against:** Canceling immediately and destroying the subscription instantly without a prorated refund.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `app/api/subscription/cancel/route.ts`, `lib/payments/stripe.ts`
+- **Tunable values set, and why those numbers:** `cancel_at_period_end: true`
+- **Was this choice forced? If so, by what:**
+
+## Storing Cancellation Reasons
+
+- **Date:** 2026-09-10
+- **What it is (my words, 2–3 sentences, as if to someone who has never heard the term):** 
+- **What breaks without it (concrete, name the failure, no "so it's secure"):** 
+- **What I chose:** Store the optional cancellation reason as an immutable audit fact in a new `message` column on the `PaymentEvent` table.
+- **What I chose against:** Adding a mutable `cancelReason` column directly to the `Subscription` table.
+- **Why (the real reason, including "it was the one I could reason about"):** 
+- **Where it lives:** `schema.prisma`, `app/api/subscription/cancel/route.ts`
+- **Tunable values set, and why those numbers:** N/A
+- **Was this choice forced? If so, by what:**
+

@@ -144,6 +144,13 @@
                   "kind": "scalar"
                 }
               },
+              "message": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "planId": {
                 "nullable": false,
                 "type": {
@@ -196,6 +203,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "message": {
+                  "column": "message"
                 },
                 "planId": {
                   "column": "planId"
@@ -789,6 +799,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "message": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "planId": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -1175,7 +1190,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "6838c97b764a3bc2567066c35b55fee683779a7c79a995a1bcc2e575aa787977"
+    "storageHash": "8d70176530896738e91bd76dbf2a58ae55b51b40d448edf61f11d9b8607ab19c"
   },
   "execution": {
     "executionHash": "7ef88f46ddfb02c085ed6930c76c27198f24a008a7cb3d0a523b0fd9b48a7610",

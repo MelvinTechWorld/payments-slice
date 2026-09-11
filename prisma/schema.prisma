@@ -67,5 +67,6 @@ model PaymentEvent {
   eventType       String   // 'INITIATION', 'VERIFICATION', 'FULFILLMENT', 'FAILURE'
   amount          Int      // minor units
   planId          String   // e.g., 'monthly', 'yearly'
+  message         String?  // optional reason or error message
   createdAt       TimestamptzString @default(now())
 }
