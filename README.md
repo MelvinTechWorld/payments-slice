@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Payments Slice
 
-## Getting Started
+A complete subscription and payment slice built with Next.js (App Router), Prisma, PostgreSQL, and Stripe.
 
-First, run the development server:
+This repository demonstrates a fully functional billing lifecycle including:
+- Subscribing to monthly or yearly plans (Stripe Checkout)
+- Upgrading mid-cycle with prorated credit calculation
+- Downgrading with changes taking effect at period-end
+- Canceling while retaining access for the remainder of the paid period
+- Webhook-driven entitlement and an append-only, idempotent payment event log
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Documentation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For the full architectural write-up, data model schema, step-by-step flow, and detailed design decisions, please read [DOCUMENTATION.md](./DOCUMENTATION.md) at the root of this repository.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quick Start
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
+- Node.js (v20+)
+- PostgreSQL (e.g. Neon, Supabase)
+- Stripe CLI
 
-## Learn More
+### Setup
 
-To learn more about Next.js, take a look at the following resources:
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Environment Configuration**
+   Copy `.env.example` to `.env` and fill in your real keys:
+   - `DATABASE_URL`
+   - `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (Test mode keys)
+   - `STRIPE_PRICE_MONTHLY` and `STRIPE_PRICE_YEARLY`
+   - `STRIPE_WEBHOOK_SECRET` (From the Stripe CLI, see step 4)
+   - `EMAIL_API_KEY` (Reused from auth-slice)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Database Migration**
+   ```bash
+   npx prisma db push
+   ```
 
-## Deploy on Vercel
+4. **Start Stripe Webhook Forwarding**
+   In a new terminal window, start the Stripe CLI to listen for webhooks and forward them to your local server:
+   ```bash
+   stripe listen --forward-to localhost:3000/api/webhooks/stripe
+   ```
+   *(Copy the webhook signing secret printed in the console to your `.env` file as `STRIPE_WEBHOOK_SECRET`)*
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+5. **Start the Development Server**
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application will be available at `http://localhost:3000`.
