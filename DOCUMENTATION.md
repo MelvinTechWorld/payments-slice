@@ -223,14 +223,72 @@ The single biggest thing I would do differently, and why.
 
 ## Evidence
 
-<!--
-The brief's "Prove it works" items. Screenshots live in /evidence/ and are
-referenced with relative paths so they render on GitHub. Every image needs a
-caption saying what it proves.
--->
+## Evidence
 
-### [Evidence item 1]
+### Payment log for one complete transaction
 
-![caption](./evidence/01-name.png)
+![Payment log showing INITIATION, VERIFICATION, FULFILLMENT](./evidence/01-payment-log-complete.png)
 
-**What this shows:**
+**What this shows:** A single checkout session logged as three distinct rows
+in `paymentEvent` — `INITIATION`, `VERIFICATION`, and `FULFILLMENT` — each with
+its own timestamp, confirming the payment lifecycle is recorded as separate
+stages rather than a single mutable status.
+
+### Proration calculation with real numbers
+
+![Proration console output showing $6.00 credit, $94.00 upgrade cost](./evidence/02a-proration-calculation-console.png)
+
+**What this shows:** An upgrade preview 12 days into a 30-day monthly cycle:
+18 days remaining, a $6.00 credit `(18/30 × $10.00)`, and a final upgrade cost
+of $94.00 `($100.00 − $6.00)`. This is the actual, verified arithmetic our
+`calculateProratedCredit` function produces, not a hypothetical example.
+
+![Payment log entries for the upgrade](./evidence/02b-proration-calculation-db.png)
+
+**What this shows:** The corresponding `paymentEvent` rows for this exact
+upgrade, confirming the amounts logged match the calculated preview.
+
+### The same webhook fired twice
+
+![Terminal showing a clean 200 response to a resent webhook](./evidence/03a-webhook-idempotency-terminal.png)
+
+**What this shows:** Using the Stripe CLI's `stripe events resend` command to
+deliberately resend a webhook event that had already been processed. The
+server returns `200` with a duplicate-ignored acknowledgment rather than
+attempting to process it again.
+
+![Database showing only one row for the resent event](./evidence/03b-webhook-idempotency-db.png)
+
+**What this shows:** Despite the same event being delivered twice, exactly one
+row exists in `paymentEvent` for that `stripeEventId`, confirming the unique
+constraint and the application's duplicate-handling logic both work correctly.
+
+### A cancelled subscription
+
+![Subscription row showing active status with cancelAtPeriodEnd true](./evidence/04a-cancelled-subscription-db.png)
+
+**What this shows:** After cancelling, the subscription's `status` remains
+`active` and `cancelAtPeriodEnd` is `true`, with `currentPeriodEnd` unchanged —
+proving access is retained through the period already paid for, rather than
+being cut off immediately.
+
+![Billing UI showing the pending cancellation](./evidence/04b-cancelled-subscription-ui.png)
+
+**What this shows:** The billing view correctly communicates the pending
+cancellation to the user in plain language, with the exact date access ends.
+
+### The duplicate-payment case
+
+![Subscription showing the extended currentPeriodEnd](./evidence/05a-duplicate-payment-subscription.png)
+
+**What this shows:** After paying for two separate checkout sessions for the
+same plan in quick succession (simulating a two-tab race condition), the
+subscription's `currentPeriodEnd` was extended by a full additional cycle
+rather than being overwritten, lost, or silently absorbing the second payment.
+
+![Payment log showing two complete lifecycles](./evidence/05b-duplicate-payment-events.png)
+
+**What this shows:** Both payments were logged in full — two complete
+`INITIATION → VERIFICATION → FULFILLMENT` sequences for the same user — proving
+neither payment was silently dropped, and the second `FULFILLMENT` correctly
+triggered the period-extension fallback rather than a conflict.
