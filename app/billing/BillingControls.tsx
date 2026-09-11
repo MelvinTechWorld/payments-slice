@@ -110,7 +110,7 @@ export default function BillingControls({
               <button 
                 onClick={handleUpgrade} 
                 disabled={loading !== null}
-                className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                className="bg-blue-600 text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
               >
                 {loading === 'upgrade' ? 'Upgrading...' : 'Upgrade to Yearly'}
               </button>
@@ -120,7 +120,7 @@ export default function BillingControls({
               <button 
                 onClick={handleDowngrade} 
                 disabled={loading !== null}
-                className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 disabled:opacity-50"
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-50"
               >
                 {loading === 'downgrade' ? 'Scheduling...' : 'Downgrade to Monthly'}
               </button>
@@ -133,7 +133,7 @@ export default function BillingControls({
           <button 
             onClick={() => setShowCancelModal(true)} 
             disabled={loading !== null}
-            className="text-red-600 hover:underline px-4 py-2"
+            className="text-red-600 hover:underline px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
           >
             Cancel Subscription
           </button>
@@ -149,11 +149,12 @@ export default function BillingControls({
               Your cancellation will take effect at the end of your current billing cycle. You will retain access until then.
             </p>
             <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Optional: Why are you leaving?</label>
+              <label htmlFor="cancel-reason" className="block text-sm font-medium mb-2">Optional: Why are you leaving?</label>
               <textarea 
+                id="cancel-reason"
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full border rounded p-2 text-sm"
+                className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 placeholder="Too expensive, missing features, etc."
               />
@@ -161,14 +162,14 @@ export default function BillingControls({
             <div className="flex justify-end gap-3">
               <button 
                 onClick={() => setShowCancelModal(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
               >
                 Nevermind
               </button>
               <button 
                 onClick={submitCancel}
                 disabled={loading === 'cancel'}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
               >
                 {loading === 'cancel' ? 'Canceling...' : 'Confirm Cancellation'}
               </button>

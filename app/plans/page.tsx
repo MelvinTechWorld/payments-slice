@@ -52,7 +52,7 @@ export default function PlansPage() {
             <button
               onClick={() => handleSubscribe('monthly')}
               disabled={loading !== null}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
             >
               {loading === 'monthly' ? 'Processing...' : 'Subscribe to Monthly'}
             </button>
@@ -68,7 +68,7 @@ export default function PlansPage() {
             <button
               onClick={() => handleSubscribe('yearly')}
               disabled={loading !== null}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
             >
               {loading === 'yearly' ? 'Processing...' : 'Subscribe to Yearly'}
             </button>
@@ -77,7 +77,7 @@ export default function PlansPage() {
       </div>
       
       <div className="mt-8">
-        <button onClick={() => router.push('/dashboard')} className="text-blue-600 underline">
+        <button onClick={() => router.push('/dashboard')} className="text-blue-600 underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1">
           Back to Dashboard
         </button>
       </div>

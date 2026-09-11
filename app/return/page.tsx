@@ -44,8 +44,8 @@ export default async function ReturnPage({
       )}
 
       <div className="flex justify-center gap-4 mt-6">
-        <a href="/dashboard" className="text-blue-600 hover:underline">Go to Dashboard</a>
-        <a href="/billing" className="text-blue-600 hover:underline">Manage Billing</a>
+        <a href="/dashboard" className="text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1">Go to Dashboard</a>
+        <a href="/billing" className="text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1">Manage Billing</a>
       </div>
     </div>
   );

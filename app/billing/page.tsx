@@ -24,12 +24,12 @@ export default async function BillingPage() {
         <h1 className="text-2xl font-bold mb-6">Billing & Subscription</h1>
         <div className="bg-gray-50 border rounded-lg p-8 text-center">
           <p className="text-gray-600 mb-4">You do not have an active subscription.</p>
-          <a href="/plans" className="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+          <a href="/plans" className="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
             View Plans
           </a>
         </div>
         <div className="mt-8">
-          <a href="/dashboard" className="text-blue-600 underline">Back to Dashboard</a>
+          <a href="/dashboard" className="text-blue-600 underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1">Back to Dashboard</a>
         </div>
       </div>
     );
@@ -103,7 +103,7 @@ export default async function BillingPage() {
       </div>
 
       <div className="mt-8">
-        <a href="/dashboard" className="text-blue-600 underline">Back to Dashboard</a>
+        <a href="/dashboard" className="text-blue-600 underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1">Back to Dashboard</a>
       </div>
     </div>
   );
